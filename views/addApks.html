@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Title</title>
+    <link href="//netdna.bootstrapcdn.com/bootstrap/3.1.0/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.2.1.min.js"
+            integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+            crossorigin="anonymous"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.7.3/socket.io.js"></script>
+    <script type="text/javascript" src="//netdna.bootstrapcdn.com/bootstrap/3.1.0/js/bootstrap.min.js"></script>
+
+</head>
+<body>
+<form class="form-horizontal" action="/" name="cadastro_app" id="form">
+    <fieldset>
+
+        <!-- Form Name -->
+        <legend style="margin-left: 10px">APK Register</legend>
+
+        <!-- Text input-->
+        <div class="form-group">
+            <label class="col-md-4 control-label" for="appName">Select APP</label>
+            <div class="col-md-5">
+                <select name="app Name" id="appName">
+                </select>
+            </div>
+        </div>
+
+        <div id="divApks">
+
+        </div>
+
+        <!--&lt;!&ndash; Text input&ndash;&gt;-->
+        <!--<div class="form-group">-->
+        <!--<label class="col-md-4 control-label" for="apk_name">APK Name</label>-->
+        <!--<div class="col-md-5">-->
+        <!--<input id="apk_name" name="apk_name" type="text" placeholder="APK Name" class="form-control input-md">-->
+        <!--</div>-->
+        <!--</div>-->
+
+        <!--&lt;!&ndash; Text input&ndash;&gt;-->
+        <!--<div class="form-group">-->
+        <!--<label class="col-md-4 control-label" for="apk_url">APK URL</label>-->
+        <!--<div class="col-md-5">-->
+        <!--<input id="apk_url" name="apk_url" type="text" placeholder="APK URL" class="form-control input-md" >-->
+        <!--</div>-->
+        <!--</div>-->
+
+        <!-- Button (Double) -->
+        <div class="form-group">
+            <label class="col-md-4 control-label" for="btnSubmit"></label>
+            <div class="col-md-8">
+                <button id="btnSubmit" type="submit" class="btn btn-primary">Register APP</button>
+                <button id="idCancelar" class="btn btn-danger" onclick="window.location='/';return false;">Cancelar</button>
+            </div>
+        </div>
+
+    </fieldset>
+</form>
+
+<script language="javascript" type="text/javascript">
+
+    $(document).ready(function () {
+        var socket = io.connect('http://localhost:3000/');
+        var countApks = 0;
+        var comeca = 0;
+        var idAnt = "";
+
+        socket.emit('getApps');
+        socket.on('sendApps', function (apps) {
+            apps.forEach(function (app) {
+                var opt = document.createElement('option');
+                opt.value = app._id;
+                opt.innerHTML = app.name;
+                document.getElementById('appName').appendChild(opt);
+            });
+            $('#appName').trigger('change');
+        });
+
+        $('#appName').on('change', function () {
+            if ((idAnt != this.value) || (idAnt == "")) {
+                comeca = 0;
+                countApks = 0;
+                $("#divApks").empty();
+                socket.emit('getApks', this.value);
+                socket.on('sendApks', function (apks) {
+                    if (apks) {
+                        apks.forEach(function (apk) {
+                            countApks++;
+                            insereCampos(apk, comeca);
+                            socket.removeListener('sendApks');
+                        });
+                    }
+                    if (countApks == 0) {
+                        insereCampos("", comeca);
+                    }
+                    socket.removeListener('sendApks');
+                });
+            }
+            idAnt = this.value;
+        });
+
+        $('#btnSubmit').click(function (e) {
+            e.preventDefault();
+            var obj = {};
+            obj.apks = [];
+            obj.app_id = $("#appName").val();
+            if (countApks > 0) {
+                for (var i = 0; i < countApks; i++) {
+                    if (($("#apk_name" + i).val() != "") && ($("#apk_url" + i).val() != "")) {
+                        obj.apks[i] = {
+                            apk_name: $("#apk_name" + i).val(),
+                            apk_url: $("#apk_url" + i).val()
+                        };
+                    }
+                }
+            }
+            else {
+                obj.apks[0] = {
+                    apk_name: $("#apk_name0").val(),
+                    apk_url: $("#apk_url0").val()
+                };
+            }
+
+            if(obj.apks) {
+                socket.emit("addApk", obj);
+                $('#form').submit();
+                setTimeout(function () {
+                    window.location.reload();
+                }, 20);
+            }
+            else {
+                alert("Preencha os campos!");
+            }
+        });
+
+        function deleteApk(id) {
+            socket.emit('removeApk', id);
+            setTimeout(function () {
+                window.location.reload();
+            }, 50);
+        }
+
+        function insereCampos(apk, start) {
+            var inp = 0;
+            if (start != 0) {
+                inp = start - 1;
+            }
+            else {
+                inp = start;
+            }
+
+
+            for (var i = start; i < start + 1; i++) {
+                for (var j = 0; j < 2; j++) {
+                    var divApk = document.createElement('div');
+                    divApk.classList.add("form-group");
+                    divApk.id = "div" + comeca;
+                    document.getElementById('divApks').appendChild(divApk);
+
+                    var labelApk = document.createElement('label');
+                    labelApk.classList.add("col-md-4", "control-label");
+                    labelApk.id = "label" + comeca;
+                    if (j == 0) {
+                        labelApk.innerText = "APK Name";
+                    }
+                    else {
+                        labelApk.innerText = "APK URL";
+                    }
+                    document.getElementById('div' + comeca).appendChild(labelApk);
+
+                    var divInpApk = document.createElement('div');
+                    divInpApk.classList.add("col-md-5");
+                    divInpApk.id = "divInp" + comeca;
+                    document.getElementById('div' + comeca).appendChild(divInpApk);
+
+                    if((j == 0) && (apk != "")) {
+                        var buttonDelete = document.createElement('button');
+                        buttonDelete.id = "button" + comeca;
+                        buttonDelete.innerText = "Delete";
+                        //buttonDelete.addEventListener('click', deleteApk(apk));
+                        document.getElementById('div' + comeca).appendChild(buttonDelete);
+                        $('#button' + comeca).click(function (e) {
+                            e.preventDefault();
+                            deleteApk(apk._id);
+                        });
+                    }
+
+                    var inputApk = document.createElement('input');
+                    inputApk.classList.add("form-control", "input-md");
+                    inputApk.type = "text";
+                    inputApk.required = "true";
+                    if (j == 0) {
+                        inputApk.id = "apk_name" + inp;
+                        if (apk) {
+                            inputApk.value = apk.apks.apk_name;
+                        }
+                    }
+                    else {
+                        inputApk.id = "apk_url" + inp;
+                        if (apk) {
+                            inputApk.value = apk.apks.apk_url;
+                        }
+                    }
+                    document.getElementById('divInp' + comeca).appendChild(inputApk);
+                    comeca++;
+                }
+                inp++;
+            }
+
+//            $("#divApks").append('<div class="form-group" id="divA"></div>');
+//            $("#divA").append('<label class="col-md-4 control-label" for="apk_name" id="labelName">APK Name</label>', '<div class="col-md-5" id="divInpName"></div>');
+//            //$("#divA").append('<div class="col-md-5"></div>');
+//            $("#divInp").append('<input id="apk_name" name="apk_name" type="text" placeholder="APK Name" class="form-control input-md">');
+//
+//            $("#divApks").append('<div class="form-group" id="divA"></div>');
+//            $("#divA").append('<label class="col-md-4 control-label" for="apk_url" id="labelUrl">APK URL</label>', '<div class="col-md-5" id="divInpUrl"></div>');
+//            //$("#divA").append('<div class="col-md-5"></div>');
+//            $("#divInp").append('<input id="apk_url" name="apk_url" type="text" placeholder="APK URL" class="form-control input-md">')
+        }
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Title</title>
+    <link href="//netdna.bootstrapcdn.com/bootstrap/3.1.0/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.2.1.min.js"
+            integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+            crossorigin="anonymous"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.7.3/socket.io.js"></script>
+    <script type="text/javascript" src="//netdna.bootstrapcdn.com/bootstrap/3.1.0/js/bootstrap.min.js"></script>
+
+</head>
+<body>
+<form class="form-horizontal" action="/" name="cadastro_app" id="form">
+    <fieldset>
+
+        <!-- Form Name -->
+        <legend style="margin-left: 10px">APP Register</legend>
+
+        <!-- Text input-->
+        <div class="form-group">
+            <label class="col-md-4 control-label" for="name">Name</label>
+            <div class="col-md-5">
+                <input id="name" name="name" type="text" placeholder="Name" required="true" class="form-control input-md">
+            </div>
+        </div>
+
+        <!-- Text input-->
+        <div class="form-group">
+            <label class="col-md-4 control-label" for="version">Version</label>
+            <div class="col-md-5">
+                <input id="version" name="version" type="text" placeholder="Version" required="true" class="form-control input-md">
+            </div>
+        </div>
+
+        <!-- Text input-->
+        <div class="form-group">
+            <label class="col-md-4 control-label" for="package">Package</label>
+            <div class="col-md-5">
+                <input id="package" name="package" type="text" placeholder="Package" required="true" class="form-control input-md">
+            </div>
+        </div>
+
+        <!-- Text input-->
+        <div class="form-group">
+            <label class="col-md-4 control-label" for="image_url">Image URL</label>
+            <div class="col-md-5">
+                <input id="image_url" name="image_url" type="text" placeholder="Image URL" required="true" class="form-control input-md">
+            </div>
+        </div>
+
+        <!-- Radio Basic -->
+        <div class="form-group">
+            <label class="col-md-4 control-label">Active</label>
+            <div class="col-md-5">
+                <input type="radio" id="idActiveTrue" name="active" value="true">
+                <label for="idActiveTrue">True</label><br/>
+                <input type="radio" id="idActiveFalse" name="active" value="false">
+                <label for="idActiveFalse">False</label><br/>
+            </div>
+        </div>
+
+        <!-- Button (Double) -->
+        <div class="form-group">
+            <label class="col-md-4 control-label" for="btnSubmit"></label>
+            <div class="col-md-8">
+                <button id="btnSubmit" type="submit" class="btn btn-primary">Register APP</button>
+                <button class="btn btn-danger" onclick="window.location='/';return false;">Cancelar</button>
+            </div>
+        </div>
+
+        <b/>
+        <label id="resultado"></label>
+
+    </fieldset>
+</form>
+
+<div class="form-group">
+    <label class="col-md-4 control-label" for="btnUpdateInstall"></label>
+    <div class="col-md-8">
+        <p>
+        <form action="" name="update_install" id="formUpdateInstall">
+            <button id="btnUpdateInstall" type="submit" class="btn btn-primary">Update Install</button>
+        </form>
+        </p>
+
+        <p>
+        <form action="" name="update_test" id="formUpdateTest">
+            <button id="btnUpdateTest" type="submit" class="btn btn-primary">Update Test</button>
+        </form>
+        </p>
+
+        <p>
+        <form action="" name="check_app" id="formCheck">
+            <button id="btnCheck"  type="submit" class="btn btn-primary">Check App</button>
+        </form>
+        </p>
+    </div>
+</div>
+
+<script language="javascript" type="text/javascript">
+
+    $(document).ready(function () {
+        var socket = io.connect('http://localhost:3000');
+
+        $('#btnSubmit').click(function (e) {
+            e.preventDefault();
+            var obj = {
+                name: $("#name").val(),
+                version: $("#version").val(),
+                package: $("#package").val(),
+                image_url: $("#image_url").val(),
+                active: $('input[name="active"]:checked').val()
+            };
+
+            if((obj.name != "") && (obj.version != "") && (obj.package != "") && (obj.image_url != "") && (obj.active != null) ) {
+                JSON.stringify(obj);
+                socket.emit("addApp", obj);
+                $('#form').submit();
+                setTimeout(function () {
+                    window.location.reload();
+                }, 20);
+            }
+            else {
+                alert("Preencha todos os campos!");
+            }
+        });
+
+        $('#btnUpdateInstall').click(function(e){
+            e.preventDefault();
+            var obj = {
+                device_id: "590b28fdfe191f1718bdf02d",
+                app_id : "590b27e4fe191f1718bdf02c"
+            };
+
+            JSON.stringify(obj);
+            socket.emit("updateInstallApp", obj, function(status) {
+                document.getElementById('resultado').innerText = 'Resultado = ' + status;
+            });
+            //$('#formUpdate').submit();
+            //setTimeout(function(){window.location.reload();},20);
+        });
+
+        $('#btnUpdateTest').click(function(e){
+            e.preventDefault();
+            var obj = {
+                device_id: "590b28fdfe191f1718bdf02d",
+                app_id : "5903a16d4882f4e6e8a2cc02",
+                date: "02/05/2017",
+                status: "TESTED",
+                obs: "DEU PAU NO SOCKET"
+            };
+
+            JSON.stringify(obj);
+            socket.emit("updateTestApp", obj, function(status) {
+                document.getElementById('resultado').innerText = 'Resultado = ' + status;
+            });
+            //$('#formUpdate').submit();
+            //setTimeout(function(){window.location.reload();},20);
+        });
+
+        $('#btnCheck').click(function(e){
+            e.preventDefault();
+            var obj = {
+                android_id: "4823748374",
+                imei: "2815476582934",
+                imsi: "42934029123",
+                iccid: "1948234",
+                sim_operator: "12874",
+                rooted: "CyanogenMod",
+                model: "Xperia Z3 D6643",
+                manufacturer: "Sony",
+                version_sdk: "5.1.1",
+                version_os: "CyanogenMod"
+            };
+
+            JSON.stringify(obj);
+            socket.emit("checkApps", obj, function(retorno) {
+                //console.log(retorno);
+                //JSON.stringify(retorno);
+                document.getElementById('resultado').innerText = 'Resultado = ' + retorno.apps.app_id;
+            });
+            //$('#formCheck').submit();
+            //setTimeout(function(){window.location.reload();},20);
+        });
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,11 @@
+{
+  "name": "app_update",
+  "version": "0.0.1",
+  "description": "app to update apps",
+  "dependencies": {
+    "express": "^4.15.2",
+    "jquery": "^3.2.1",
+    "mongoose": "^4.9.6",
+    "socket.io": "^1.7.3"
+  }
+}

@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>HTML5 Contact Form</title>
+
+    <script src="https://code.jquery.com/jquery-3.2.1.min.js"
+            integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+            crossorigin="anonymous"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.7.3/socket.io.js"></script>
+
+    <script language="javascript" type="text/javascript">
+
+        $(document).ready(function () {
+            var socket = io.connect('http://localhost:3000');
+
+            $('#btnSubmit').click(function(e){
+                var obj = {
+                    name: $("#name").val(),
+                    version: $("#version").val(),
+                    package: $("#package").val(),
+                    image_url: $("#image_url").val(),
+                    active: $('input[name="active"]:checked').val(),
+                    apks: {
+                        apk_name: $("#apk_name").val(),
+                        apk_url: $("#apk_url").val(),
+                    }
+                };
+
+                JSON.stringify(obj);
+                socket.emit("addApp", obj);
+                $('#form').submit();
+                setTimeout(function(){window.location.reload();},20);
+            });
+
+            $('#btnUpdate').click(function(e){
+                e.preventDefault();
+                var obj = {
+                    device_id: "590a2a9d6dbd498539abfb9e",
+                    app_id : "5903a16d4882f4e6e8a2cc02",
+                    date: "02/05/2017",
+                    status: "INSTALL"
+                };
+
+                JSON.stringify(obj);
+                socket.emit("updateStatusApp", obj, function(status) {
+                    document.getElementById('resultado').innerText = 'Resultado = ' + status;
+                });
+                //$('#formUpdate').submit();
+                //setTimeout(function(){window.location.reload();},20);
+            });
+
+            $('#btnCheck').click(function(e){
+                e.preventDefault();
+                var obj = {
+                    android_id: "4823748374",
+                    imei: "2815476582934",
+                    imsi: "42934029123",
+                    iccid: "1948234",
+                    sim_operator: "12874",
+                    rooted: "CyanogenMod",
+                    model: "Xperia Z3 D6643",
+                    manufacturer: "Sony",
+                    version_sdk: "5.1.1",
+                    version_os: "CyanogenMod"
+                };
+
+                JSON.stringify(obj);
+                socket.emit("checkApps", obj, function(retorno) {
+                    //console.log(retorno);
+                    //JSON.stringify(retorno);
+                    document.getElementById('resultado').innerText = 'Resultado = ' + retorno.apps.app_id;
+                });
+                //$('#formCheck').submit();
+                //setTimeout(function(){window.location.reload();},20);
+            });
+
+        });
+    </script>
+</head>
+<body>
+
+
+    <form class="cadastro_app" action="/" name="cadastro_app" id="form">
+        <ul>
+            <li>
+                <h2>APP Registration</h2>
+            </li>
+            <li>
+                <label for="name">Name:</label>
+                <input type="text" name="name" id="name"/>
+            </li>
+
+            <li>
+                <label for="version">Version:</label>
+                <input type="text" name="version" id="version"/>
+            </li>
+
+            <li>
+                <label for="package">Package:</label>
+                <input type="text" name="package" id="package"/>
+            </li>
+
+            <li>
+                <label for="image_url">Image URL:</label>
+                <input type="text" name="image_url" id="image_url"/>
+            </li>
+
+            <li>
+                <label>Active:</label>
+                <br/>
+                <input type="radio" name="active" value="true"> True<br>
+                <input type="radio" name="active" value="false"> False<br>
+            </li>
+            <br/>
+
+            <label>APK</label>
+
+            <li>
+                <label for="apk_name">APK name:</label>
+                <input type="text" name="apk_name" id="apk_name"/>
+            </li>
+
+            <li>
+                <label for="apk_url">APK URL:</label>
+                <input type="text" name="apk_url" id="apk_url"/>
+            </li>
+
+            <li>
+                <button id="btnSubmit" class="btnSubmit" type="submit">Register APP</button>
+            </li>
+        </ul>
+    </form>
+
+    <form action="" name="update_app" id="formUpdate">
+        <li>
+            <button id="btnUpdate" class="btnUpdate" type="submit">Update Status App</button>
+        </li>
+    </form>
+
+    <form action="" name="check_app" id="formCheck">
+        <li>
+            <button id="btnCheck" class="btnCheck" type="submit">Check App</button>
+        </li>
+    </form>
+    <b/>
+    <label id="resultado"></label>
+</body>
+</html>
